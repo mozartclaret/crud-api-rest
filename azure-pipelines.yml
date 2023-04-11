@@ -1,0 +1,40 @@
+# Trigger
+trigger:
+  branches:
+    include:
+    - master
+
+# Pipeline
+pool:
+  vmImage: Ubuntu-20.04
+
+# Stage
+stages:
+- stage: DeployTerraform
+  displayName: Deploy Terraform
+  jobs:
+  - job: DeployTerraform
+    displayName: 'Deploy infrastructure with Terraform'
+
+# Steps
+    steps:
+    - task: Bash@3
+      displayName: "Terraform Install"
+      name: "terraform_install"
+      inputs:
+        targetType: inline
+        script: "echo \"# Downloading Terraform v1.3.7\"\nwget https://releases.hashicorp.com/terraform/1.3.7/terraform_1.3.8_linux_amd64.zip\necho \"# Unzipping files\"\nunzip terraform_1.3.8_linux_amd64.zip\n        \necho \"# Configuring terraform and checking version\"\nexport TERRAFORM_PATH=$(which terraform)\nls -lha\nsudo mv terraform $TERRAFORM_PATH\n\nterraform -v\n"
+    - task: Bash@3
+      displayName: 'Deploy Service'
+      inputs:
+        targetType: 'inline'
+        Script: |
+          export AWS_ACCESS_KEY_ID=744417067545
+          export AWS_SECRET_ACCESS_KEY=f6966ef8a6e558577d386745f48c570d3108c22c7142ec8073ed9b0d90031198
+          mkdir devops-terraform-aws-instance
+          cd devops-terraform-aws-instance/
+          touch main.tf
+          terraform init
+          terraform fmt
+          terraform validate
+          terraform apply
